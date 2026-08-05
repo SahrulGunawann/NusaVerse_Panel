@@ -78,16 +78,6 @@ class AdminController extends Controller
         $slug = Str::slug($request->name);
         $id = 'heritage_' . Str::random(8);
 
-        $coverImagePath = 'assets/images/placeholders/placeholder_heritage.jpg';
-        if ($request->hasFile('cover_image')) {
-            $coverImagePath = $request->file('cover_image')->store('images', 'public');
-        }
-
-        $model3dUrl = '';
-        if ($request->hasFile('model_3d')) {
-            $model3dUrl = $request->file('model_3d')->store('models', 'public');
-        }
-
         $timelineId = 'timeline_' . $slug;
         $hotspotId = 'hotspot_' . $slug;
 
@@ -101,31 +91,6 @@ class AdminController extends Controller
                     ];
                 }
             }
-        }
-
-        if (!Schema::hasColumn('heritages', 'additional_sections')) {
-            try {
-                Schema::table('heritages', function (Blueprint $table) {
-                    $table->json('additional_sections')->nullable();
-                });
-            } catch (\Exception $e) {}
-        }
-
-        if (!Schema::hasColumn('heritages', 'source_name')) {
-            try {
-                Schema::table('heritages', function (Blueprint $table) {
-                    $table->string('source_name')->nullable();
-                    $table->string('source_url')->nullable();
-                });
-            } catch (\Exception $e) {}
-        }
-
-        if (!Schema::hasColumn('heritages', 'sources')) {
-            try {
-                Schema::table('heritages', function (Blueprint $table) {
-                    $table->json('sources')->nullable();
-                });
-            } catch (\Exception $e) {}
         }
 
         $sources = [];
@@ -147,6 +112,32 @@ class AdminController extends Controller
 
         try {
             $this->ensureHeritageColumnsExist();
+
+            $coverImagePath = 'assets/images/placeholders/placeholder_heritage.jpg';
+            if ($request->hasFile('cover_image')) {
+                try {
+                    $imgDir = storage_path('app/public/images');
+                    if (!file_exists($imgDir)) {
+                        @mkdir($imgDir, 0775, true);
+                    }
+                    $coverImagePath = $request->file('cover_image')->store('images', 'public');
+                } catch (\Exception $e) {
+                    $coverImagePath = 'assets/images/placeholders/placeholder_heritage.jpg';
+                }
+            }
+
+            $model3dUrl = '';
+            if ($request->hasFile('model_3d')) {
+                try {
+                    $modelDir = storage_path('app/public/models');
+                    if (!file_exists($modelDir)) {
+                        @mkdir($modelDir, 0775, true);
+                    }
+                    $model3dUrl = $request->file('model_3d')->store('models', 'public');
+                } catch (\Exception $e) {
+                    $model3dUrl = '';
+                }
+            }
 
             Heritage::create([
                 'id' => $id,
@@ -260,73 +251,63 @@ class AdminController extends Controller
             'model_3d' => 'nullable|file|max:102400',
         ]);
 
-        if ($request->hasFile('cover_image')) {
-            $heritage->cover_image = $request->file('cover_image')->store('images', 'public');
-        }
+        try {
+            $this->ensureHeritageColumnsExist();
 
-        if ($request->hasFile('model_3d')) {
-            $heritage->model_3d_url = $request->file('model_3d')->store('models', 'public');
-        }
+            if ($request->hasFile('cover_image')) {
+                try {
+                    $imgDir = storage_path('app/public/images');
+                    if (!file_exists($imgDir)) {
+                        @mkdir($imgDir, 0775, true);
+                    }
+                    $heritage->cover_image = $request->file('cover_image')->store('images', 'public');
+                } catch (\Exception $e) {}
+            }
 
-        $additionalSections = [];
-        if ($request->filled('additional_sections')) {
-            foreach ($request->input('additional_sections') as $sec) {
-                if (!empty($sec['title']) || !empty($sec['content'])) {
-                    $additionalSections[] = [
-                        'title' => $sec['title'] ?? '',
-                        'content' => $sec['content'] ?? '',
-                    ];
+            if ($request->hasFile('model_3d')) {
+                try {
+                    $modelDir = storage_path('app/public/models');
+                    if (!file_exists($modelDir)) {
+                        @mkdir($modelDir, 0775, true);
+                    }
+                    $heritage->model_3d_url = $request->file('model_3d')->store('models', 'public');
+                } catch (\Exception $e) {}
+            }
+
+            $additionalSections = [];
+            if ($request->filled('additional_sections')) {
+                foreach ($request->input('additional_sections') as $sec) {
+                    if (!empty($sec['title']) || !empty($sec['content'])) {
+                        $additionalSections[] = [
+                            'title' => $sec['title'] ?? '',
+                            'content' => $sec['content'] ?? '',
+                        ];
+                    }
                 }
             }
-        }
 
-        if (!Schema::hasColumn('heritages', 'additional_sections')) {
-            try {
-                Schema::table('heritages', function (Blueprint $table) {
-                    $table->json('additional_sections')->nullable();
-                });
-            } catch (\Exception $e) {}
-        }
-
-        if (!Schema::hasColumn('heritages', 'source_name')) {
-            try {
-                Schema::table('heritages', function (Blueprint $table) {
-                    $table->string('source_name')->nullable();
-                    $table->string('source_url')->nullable();
-                });
-            } catch (\Exception $e) {}
-        }
-
-        if (!Schema::hasColumn('heritages', 'sources')) {
-            try {
-                Schema::table('heritages', function (Blueprint $table) {
-                    $table->json('sources')->nullable();
-                });
-            } catch (\Exception $e) {}
-        }
-
-        $sources = [];
-        if ($request->filled('sources')) {
-            foreach ($request->input('sources') as $src) {
-                if (!empty($src['name']) || !empty($src['url'])) {
-                    $sources[] = [
-                        'name' => $src['name'] ?? '',
-                        'url' => $src['url'] ?? '',
-                    ];
+            $sources = [];
+            if ($request->filled('sources')) {
+                foreach ($request->input('sources') as $src) {
+                    if (!empty($src['name']) || !empty($src['url'])) {
+                        $sources[] = [
+                            'name' => $src['name'] ?? '',
+                            'url' => $src['url'] ?? '',
+                        ];
+                    }
                 }
+            } elseif ($request->filled('source_name')) {
+                $sources[] = [
+                    'name' => $request->source_name,
+                    'url' => $request->source_url ?? '',
+                ];
             }
-        } elseif ($request->filled('source_name')) {
-            $sources[] = [
-                'name' => $request->source_name,
-                'url' => $request->source_url ?? '',
-            ];
-        }
 
-        $heritage->name = $request->name;
-        $heritage->category_name = $request->category_name;
-        $heritage->category_id = Str::slug($request->category_name);
-        $heritage->province_name = $request->province_name;
-        $heritage->province_id = Str::slug($request->province_name);
+            $heritage->name = $request->name;
+            $heritage->category_name = $request->category_name;
+            $heritage->category_id = Str::slug($request->category_name);
+            $heritage->province_name = $request->province_name;
+            $heritage->province_id = Str::slug($request->province_name);
         $heritage->short_description = Str::limit($request->full_description, 120);
         $heritage->full_description = $request->full_description;
         $heritage->additional_sections = $additionalSections;
@@ -392,7 +373,10 @@ class AdminController extends Controller
             }
         }
 
-        return redirect()->route('admin.heritages.index')->with('success', 'Data Cagar Budaya berhasil diperbarui!');
+            return redirect()->route('admin.heritages.index')->with('success', 'Data Cagar Budaya berhasil diperbarui!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memperbarui Cagar Budaya: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function heritagesDestroy($id)

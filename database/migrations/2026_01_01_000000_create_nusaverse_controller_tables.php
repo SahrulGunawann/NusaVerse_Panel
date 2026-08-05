@@ -158,8 +158,11 @@ return new class extends Migration
             $table->text('short_description');
             $table->longText('full_description');
             $table->json('additional_sections')->nullable();
+            $table->string('source_name')->nullable();
+            $table->string('source_url')->nullable();
+            $table->json('sources')->nullable();
             $table->string('cover_image');
-            $table->string('model_3d_url');
+            $table->string('model_3d_url')->default('');
             $table->double('latitude');
             $table->double('longitude');
             $table->string('timeline_id')->default('');

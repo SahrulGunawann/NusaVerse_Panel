@@ -145,90 +145,96 @@ class AdminController extends Controller
             ];
         }
 
-        Heritage::create([
-            'id' => $id,
-            'name' => $request->name,
-            'slug' => $slug,
-            'category_name' => $request->category_name,
-            'category_id' => Str::slug($request->category_name),
-            'province_name' => $request->province_name,
-            'province_id' => Str::slug($request->province_name),
-            'short_description' => Str::limit($request->full_description, 120),
-            'full_description' => $request->full_description,
-            'additional_sections' => $additionalSections,
-            'source_name' => $sources[0]['name'] ?? $request->source_name,
-            'source_url' => $sources[0]['url'] ?? $request->source_url,
-            'sources' => $sources,
-            'cover_image' => $coverImagePath,
-            'model_3d_url' => $model3dUrl,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'opening_hours' => '08.00 - 17.00 WIB',
-            'ticket_price' => 'Gratis',
-            'is_featured' => $request->boolean('is_featured'),
-            'timeline_id' => $timelineId,
-            'hotspot_id' => $hotspotId,
-        ]);
+        try {
+            $this->ensureHeritageColumnsExist();
 
-        // Create Timeline & Events if provided
-        if ($request->filled('timeline_events')) {
-            $timeline = Timeline::create([
-                'id' => $timelineId,
-                'heritage_id' => $id,
-                'heritage_slug' => $slug,
-                'title' => 'Linimasa Sejarah ' . $request->name,
+            Heritage::create([
+                'id' => $id,
+                'name' => $request->name,
+                'slug' => $slug,
+                'category_name' => $request->category_name,
+                'category_id' => Str::slug($request->category_name),
+                'province_name' => $request->province_name,
+                'province_id' => Str::slug($request->province_name),
+                'short_description' => Str::limit($request->full_description, 120),
+                'full_description' => $request->full_description,
+                'additional_sections' => $additionalSections,
+                'source_name' => $sources[0]['name'] ?? $request->source_name,
+                'source_url' => $sources[0]['url'] ?? $request->source_url,
+                'sources' => $sources,
+                'cover_image' => $coverImagePath,
+                'model_3d_url' => $model3dUrl,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'opening_hours' => '08.00 - 17.00 WIB',
+                'ticket_price' => 'Gratis',
+                'is_featured' => $request->boolean('is_featured'),
+                'timeline_id' => $timelineId,
+                'hotspot_id' => $hotspotId,
             ]);
 
-            foreach ($request->timeline_events as $index => $event) {
-                if (!empty($event['year']) || !empty($event['title'])) {
-                    TimelineEvent::create([
-                        'timeline_id' => $timeline->id,
-                        'year' => $event['year'] ?? '',
-                        'title' => $event['title'] ?? '',
-                        'description' => $event['description'] ?? '',
-                        'order' => $index,
-                    ]);
+            // Create Timeline & Events if provided
+            if ($request->filled('timeline_events')) {
+                $timeline = Timeline::create([
+                    'id' => $timelineId,
+                    'heritage_id' => $id,
+                    'heritage_slug' => $slug,
+                    'title' => 'Linimasa Sejarah ' . $request->name,
+                ]);
+
+                foreach ($request->timeline_events as $index => $event) {
+                    if (!empty($event['year']) || !empty($event['title'])) {
+                        TimelineEvent::create([
+                            'timeline_id' => $timeline->id,
+                            'year' => $event['year'] ?? '',
+                            'title' => $event['title'] ?? '',
+                            'description' => $event['description'] ?? '',
+                            'order' => $index,
+                        ]);
+                    }
                 }
             }
-        }
 
-        // Create 3D Hotspots if provided
-        if ($request->filled('hotspot_items')) {
-            $hotspot = Hotspot::create([
-                'id' => $hotspotId,
-                'heritage_id' => $id,
-                'heritage_slug' => $slug,
-                'title' => 'Titik Informasi 3D ' . $request->name,
-            ]);
+            // Create 3D Hotspots if provided
+            if ($request->filled('hotspot_items')) {
+                $hotspot = Hotspot::create([
+                    'id' => $hotspotId,
+                    'heritage_id' => $id,
+                    'heritage_slug' => $slug,
+                    'title' => 'Titik Informasi 3D ' . $request->name,
+                ]);
 
-            foreach ($request->hotspot_items as $index => $item) {
-                if (!empty($item['title'])) {
-                    HotspotItem::create([
-                        'hotspot_id' => $hotspot->id,
-                        'title' => $item['title'] ?? '',
-                        'description' => $item['description'] ?? '',
-                        'x' => (float)($item['x'] ?? 0),
-                        'y' => (float)($item['y'] ?? 0),
-                        'z' => (float)($item['z'] ?? 0),
-                        'order' => $index,
-                    ]);
+                foreach ($request->hotspot_items as $index => $item) {
+                    if (!empty($item['title'])) {
+                        HotspotItem::create([
+                            'hotspot_id' => $hotspot->id,
+                            'title' => $item['title'] ?? '',
+                            'description' => $item['description'] ?? '',
+                            'x' => (float)($item['x'] ?? 0),
+                            'y' => (float)($item['y'] ?? 0),
+                            'z' => (float)($item['z'] ?? 0),
+                            'order' => $index,
+                        ]);
+                    }
                 }
             }
+
+            // Auto-create empty Quiz record for new Heritage
+            Quiz::firstOrCreate(
+                ['heritage_slug' => $slug],
+                [
+                    'id' => 'quiz_' . $slug,
+                    'category' => $request->category_name ?? 'Sejarah & Budaya',
+                    'title' => 'Kuis ' . $request->name,
+                    'description' => 'Uji pengetahuan dan wawasan Anda tentang ' . $request->name . '.',
+                    'passing_score' => 70,
+                ]
+            );
+
+            return redirect()->route('admin.heritages.index')->with('success', 'Cagar Budaya berhasil ditambahkan!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menyimpan Cagar Budaya: ' . $e->getMessage())->withInput();
         }
-
-        // Auto-create empty Quiz record for new Heritage
-        Quiz::firstOrCreate(
-            ['heritage_slug' => $slug],
-            [
-                'id' => 'quiz_' . $slug,
-                'category' => $request->category_name ?? 'Sejarah & Budaya',
-                'title' => 'Kuis ' . $request->name,
-                'description' => 'Uji pengetahuan dan wawasan Anda tentang ' . $request->name . '.',
-                'passing_score' => 70,
-            ]
-        );
-
-        return redirect()->route('admin.heritages.index')->with('success', 'Cagar Budaya berhasil ditambahkan!');
     }
 
     public function heritagesEdit($id)
@@ -704,5 +710,34 @@ class AdminController extends Controller
         } catch (\Exception $e) {}
 
         return redirect()->route('admin.dashboard')->with('success', 'Seluruh database telah di-reset (dikosongkan 100%)!');
+    }
+
+    private function ensureHeritageColumnsExist(): void
+    {
+        try {
+            if (Schema::hasTable('heritages')) {
+                if (!Schema::hasColumn('heritages', 'additional_sections')) {
+                    Schema::table('heritages', function (Blueprint $table) {
+                        $table->json('additional_sections')->nullable();
+                    });
+                }
+                if (!Schema::hasColumn('heritages', 'source_name')) {
+                    Schema::table('heritages', function (Blueprint $table) {
+                        $table->string('source_name')->nullable();
+                        $table->string('source_url')->nullable();
+                    });
+                }
+                if (!Schema::hasColumn('heritages', 'sources')) {
+                    Schema::table('heritages', function (Blueprint $table) {
+                        $table->json('sources')->nullable();
+                    });
+                }
+                if (!Schema::hasColumn('heritages', 'model_3d_url')) {
+                    Schema::table('heritages', function (Blueprint $table) {
+                        $table->string('model_3d_url')->default('');
+                    });
+                }
+            }
+        } catch (\Exception $e) {}
     }
 }

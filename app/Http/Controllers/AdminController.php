@@ -71,9 +71,17 @@ class AdminController extends Controller
             'full_description' => 'required|string',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
-            'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
+            'cover_image' => 'nullable|file|max:10240',
             'model_3d' => 'nullable|file|max:102400',
         ]);
+
+        if ($request->hasFile('cover_image') && !$request->file('cover_image')->isValid()) {
+            return back()->with('error', 'Gagal mengunggah Gambar Sampul: Ukuran file melebihi batas upload PHP cPanel Anda (' . ini_get('upload_max_filesize') . '). Silakan naikkan upload_max_filesize di cPanel MultiPHP INI Editor.')->withInput();
+        }
+
+        if ($request->hasFile('model_3d') && !$request->file('model_3d')->isValid()) {
+            return back()->with('error', 'Gagal mengunggah File 3D Model: Ukuran file melebihi batas upload PHP cPanel Anda (' . ini_get('upload_max_filesize') . '). Silakan naikkan upload_max_filesize di cPanel MultiPHP INI Editor.')->withInput();
+        }
 
         $slug = Str::slug($request->name);
         $id = 'heritage_' . Str::random(8);
@@ -253,9 +261,17 @@ class AdminController extends Controller
             'full_description' => 'required|string',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
-            'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
+            'cover_image' => 'nullable|file|max:10240',
             'model_3d' => 'nullable|file|max:102400',
         ]);
+
+        if ($request->hasFile('cover_image') && !$request->file('cover_image')->isValid()) {
+            return back()->with('error', 'Gagal memperbarui Gambar Sampul: Ukuran file melebihi batas upload PHP cPanel Anda (' . ini_get('upload_max_filesize') . '). Silakan naikkan upload_max_filesize di cPanel MultiPHP INI Editor.')->withInput();
+        }
+
+        if ($request->hasFile('model_3d') && !$request->file('model_3d')->isValid()) {
+            return back()->with('error', 'Gagal memperbarui File 3D Model: Ukuran file melebihi batas upload PHP cPanel Anda (' . ini_get('upload_max_filesize') . '). Silakan naikkan upload_max_filesize di cPanel MultiPHP INI Editor.')->withInput();
+        }
 
         try {
             $this->ensureHeritageColumnsExist();

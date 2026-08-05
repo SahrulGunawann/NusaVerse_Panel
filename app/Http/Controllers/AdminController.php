@@ -126,13 +126,19 @@ class AdminController extends Controller
                 try {
                     $imgDir = storage_path('app/public/images');
                     if (!file_exists($imgDir)) {
-                        @mkdir($imgDir, 0775, true);
+                        @mkdir($imgDir, 0777, true);
                     }
                     $file = $request->file('cover_image');
                     $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
                     $filename = Str::random(40) . '.' . $ext;
-                    $coverImagePath = $file->storeAs('images', $filename, 'public');
+                    try {
+                        $coverImagePath = $file->storeAs('images', $filename, 'public');
+                    } catch (\Throwable $e) {
+                        $file->move($imgDir, $filename);
+                        $coverImagePath = 'images/' . $filename;
+                    }
                 } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Cover Image Upload Failed: ' . $e->getMessage());
                     $coverImagePath = 'assets/images/placeholders/placeholder_heritage.jpg';
                 }
             }
@@ -142,13 +148,19 @@ class AdminController extends Controller
                 try {
                     $modelDir = storage_path('app/public/models');
                     if (!file_exists($modelDir)) {
-                        @mkdir($modelDir, 0775, true);
+                        @mkdir($modelDir, 0777, true);
                     }
                     $file = $request->file('model_3d');
                     $ext = strtolower($file->getClientOriginalExtension() ?: 'glb');
                     $filename = Str::random(40) . '.' . $ext;
-                    $model3dUrl = $file->storeAs('models', $filename, 'public');
+                    try {
+                        $model3dUrl = $file->storeAs('models', $filename, 'public');
+                    } catch (\Throwable $e) {
+                        $file->move($modelDir, $filename);
+                        $model3dUrl = 'models/' . $filename;
+                    }
                 } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('3D Model Upload Failed: ' . $e->getMessage());
                     $model3dUrl = '';
                 }
             }
@@ -280,26 +292,40 @@ class AdminController extends Controller
                 try {
                     $imgDir = storage_path('app/public/images');
                     if (!file_exists($imgDir)) {
-                        @mkdir($imgDir, 0775, true);
+                        @mkdir($imgDir, 0777, true);
                     }
                     $file = $request->file('cover_image');
                     $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
                     $filename = Str::random(40) . '.' . $ext;
-                    $heritage->cover_image = $file->storeAs('images', $filename, 'public');
-                } catch (\Throwable $e) {}
+                    try {
+                        $heritage->cover_image = $file->storeAs('images', $filename, 'public');
+                    } catch (\Throwable $e) {
+                        $file->move($imgDir, $filename);
+                        $heritage->cover_image = 'images/' . $filename;
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Update Cover Failed: ' . $e->getMessage());
+                }
             }
 
             if ($request->hasFile('model_3d')) {
                 try {
                     $modelDir = storage_path('app/public/models');
                     if (!file_exists($modelDir)) {
-                        @mkdir($modelDir, 0775, true);
+                        @mkdir($modelDir, 0777, true);
                     }
                     $file = $request->file('model_3d');
                     $ext = strtolower($file->getClientOriginalExtension() ?: 'glb');
                     $filename = Str::random(40) . '.' . $ext;
-                    $heritage->model_3d_url = $file->storeAs('models', $filename, 'public');
-                } catch (\Throwable $e) {}
+                    try {
+                        $heritage->model_3d_url = $file->storeAs('models', $filename, 'public');
+                    } catch (\Throwable $e) {
+                        $file->move($modelDir, $filename);
+                        $heritage->model_3d_url = 'models/' . $filename;
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Update 3D Model Failed: ' . $e->getMessage());
+                }
             }
 
             $additionalSections = [];

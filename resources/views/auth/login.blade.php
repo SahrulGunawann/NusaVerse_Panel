@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login &middot; NusaVerse Controller</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/NusaVerse.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,9 +27,7 @@
         <!-- Logo & Header -->
         <div class="text-center space-y-3">
             <div class="inline-flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-amber-950 via-amber-900 to-amber-950 border border-amber-800/40 rounded-full shadow-lg">
-                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 via-amber-600 to-amber-400 text-amber-950 font-black flex items-center justify-center text-xs tracking-tighter shadow-md">
-                    NV
-                </div>
+                <img src="{{ asset('images/NusaVerse.png') }}" alt="NusaVerse Logo" class="w-8 h-8 object-cover rounded-full shadow-md border border-amber-600/40">
                 <span class="text-sm font-extrabold text-amber-100 tracking-wide">NusaVerse Controller</span>
             </div>
             <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Selamat Datang</h1>

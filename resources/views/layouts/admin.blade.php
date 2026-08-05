@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NusaVerse Controller Panel</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/NusaVerse.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -20,9 +21,7 @@
             
             <!-- Left Circular Brand Icon -->
             <a href="{{ route('admin.dashboard') }}" class="flex items-center space-x-2 pl-1 group">
-                <div class="w-9 h-9 rounded-full bg-amber-100 text-amber-950 font-black text-xs flex items-center justify-center shadow-md group-hover:scale-105 transition transform">
-                    NV
-                </div>
+                <img src="{{ asset('images/NusaVerse.png') }}" alt="NusaVerse Logo" class="w-9 h-9 object-cover rounded-full shadow-md group-hover:scale-105 transition transform border border-amber-600/40">
                 <span class="font-extrabold text-sm text-amber-50 pr-1.5 hidden sm:inline-block">NusaVerse</span>
             </a>
 
@@ -127,9 +126,12 @@
         <div class="max-w-4xl mx-auto bg-gradient-to-r from-amber-950 via-amber-900 to-amber-950 border border-amber-800/40 text-amber-100 rounded-3xl p-4 sm:px-6 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
             
             <!-- Left Side: Brand Badging -->
-            <div>
-                <h4 class="font-extrabold text-amber-100 tracking-wide text-xs">NusaVerse Controller</h4>
-                <p class="text-[11px] text-amber-300/60">Pusat Kelola Data Cagar Budaya</p>
+            <div class="flex items-center space-x-3">
+                <img src="{{ asset('images/NusaVerse.png') }}" alt="NusaVerse Logo" class="w-8 h-8 object-cover rounded-full shadow-md border border-amber-600/40">
+                <div>
+                    <h4 class="font-extrabold text-amber-100 tracking-wide text-xs">NusaVerse Controller</h4>
+                    <p class="text-[11px] text-amber-300/60">Pusat Kelola Data Cagar Budaya</p>
+                </div>
             </div>
 
             <!-- Middle: Download Mobile APK Card -->

@@ -1,0 +1,48 @@
+services:
+  app:
+    build: .
+    container_name: nusa_app
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: php -d upload_max_filesize=128M -d post_max_size=128M -d memory_limit=512M artisan serve --host=0.0.0.0 --port=8000
+
+  db:
+    image: mariadb:11.4
+    container_name: nusa_db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: nusa_controller
+      MARIADB_USER: nusa
+      MARIADB_PASSWORD: nusa123
+    ports:
+      - "3306:3306"
+    volumes:
+      - nusa_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: nusa_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    ports:
+      - "8080:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  nusa_db_data:

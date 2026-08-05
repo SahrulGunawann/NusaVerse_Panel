@@ -120,8 +120,11 @@ class AdminController extends Controller
                     if (!file_exists($imgDir)) {
                         @mkdir($imgDir, 0775, true);
                     }
-                    $coverImagePath = $request->file('cover_image')->store('images', 'public');
-                } catch (\Exception $e) {
+                    $file = $request->file('cover_image');
+                    $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+                    $filename = Str::random(40) . '.' . $ext;
+                    $coverImagePath = $file->storeAs('images', $filename, 'public');
+                } catch (\Throwable $e) {
                     $coverImagePath = 'assets/images/placeholders/placeholder_heritage.jpg';
                 }
             }
@@ -133,8 +136,11 @@ class AdminController extends Controller
                     if (!file_exists($modelDir)) {
                         @mkdir($modelDir, 0775, true);
                     }
-                    $model3dUrl = $request->file('model_3d')->store('models', 'public');
-                } catch (\Exception $e) {
+                    $file = $request->file('model_3d');
+                    $ext = strtolower($file->getClientOriginalExtension() ?: 'glb');
+                    $filename = Str::random(40) . '.' . $ext;
+                    $model3dUrl = $file->storeAs('models', $filename, 'public');
+                } catch (\Throwable $e) {
                     $model3dUrl = '';
                 }
             }
@@ -260,8 +266,11 @@ class AdminController extends Controller
                     if (!file_exists($imgDir)) {
                         @mkdir($imgDir, 0775, true);
                     }
-                    $heritage->cover_image = $request->file('cover_image')->store('images', 'public');
-                } catch (\Exception $e) {}
+                    $file = $request->file('cover_image');
+                    $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+                    $filename = Str::random(40) . '.' . $ext;
+                    $heritage->cover_image = $file->storeAs('images', $filename, 'public');
+                } catch (\Throwable $e) {}
             }
 
             if ($request->hasFile('model_3d')) {
@@ -270,8 +279,11 @@ class AdminController extends Controller
                     if (!file_exists($modelDir)) {
                         @mkdir($modelDir, 0775, true);
                     }
-                    $heritage->model_3d_url = $request->file('model_3d')->store('models', 'public');
-                } catch (\Exception $e) {}
+                    $file = $request->file('model_3d');
+                    $ext = strtolower($file->getClientOriginalExtension() ?: 'glb');
+                    $filename = Str::random(40) . '.' . $ext;
+                    $heritage->model_3d_url = $file->storeAs('models', $filename, 'public');
+                } catch (\Throwable $e) {}
             }
 
             $additionalSections = [];
